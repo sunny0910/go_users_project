@@ -43,32 +43,33 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
-	body, err := ioutil.ReadAll(r.Body)
+	body, _ := ioutil.ReadAll(r.Body)
 	vars := mux.Vars(r)
-	userId, err := strconv.Atoi(vars["userId"])
+	userId, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		_, _ = w.Write([]byte("Error parsing id"))
 		return
 	}
 	_ = json.Unmarshal(body, &user)
-	error := models.UpdateUser(userId, &user)
-	if error != nil {
-		w.Write([]byte("Error while updating"))
+	er := models.UpdateUser(userId, &user)
+	if er != nil {
+		_, _ = w.Write([]byte("Error while updating"))
 		return
 	}
+	user.Id = userId
 	resp, _ := json.Marshal(user)
 	_, _ = w.Write(resp)
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userId, err := strconv.Atoi(vars["userId"])
+	userId, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		_, _ = w.Write([]byte("Error parsing id"))
 		return
 	}
-	error := models.DeleteUser(userId)
-	if error != nil {
+	er := models.DeleteUser(userId)
+	if er != nil {
 		_, _ = w.Write([]byte("Error while deleting user"))
 		return
 	}

@@ -3,6 +3,7 @@ package config
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
@@ -19,6 +20,7 @@ type mysqlconfig struct {
 }
 
 func ConnectToMysql() {
+	LoadEnvFile()
 	config := mysqlconfig{
 		host:     os.Getenv("Server"),
 		user:     os.Getenv("UserName"),

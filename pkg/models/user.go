@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"users_project/pkg/config"
 )
@@ -19,20 +18,23 @@ type User struct {
 var db *sql.DB
 
 func init() {
+	config.ConnectToMysql()
 	db = config.GetDb()
 }
 
-func (u *User) CreateUser() (int, error) {
-	q := "Insert into users(name, email, phone) values (?, ?, ?); Select LAST_INSERT_ID();"
-	row := db.QueryRow(q, u.Name, u.Email, u.Phone)
-	var id int
-	err := row.Scan(&id)
+func (u *User) CreateUser() (int64, error) {
+	q := "Insert into users(name, email, phone) values (?, ?, ?)"
+	result,err := db.Exec(q, u.Name, u.Email, u.Phone)
 	if err != nil {
-		log.Fatalf("Error while inserting row: %v, %v, %v", u.Name,
-		u.Email, u.Phone)
+		log.Print("Error", err)
 		return 0, err
 	}
-	fmt.Print(id)
+	id, err := result.LastInsertId()
+	if err != nil {
+		//log.Fatal("Error while inserting row: ", u) # as fatal terminates the application
+		log.Print("Error while inserting row", u)
+		return 0, err
+	}
 	return id, nil
 }
 
@@ -56,14 +58,13 @@ func GetAllUsers() ([]User, error) {
 	for rows.Next() {
 		var user User
 		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.Phone, &user.CreatedAt, &user.UpdatedAt)
-		fmt.Println(err)
 		users = append(users, user)
 	}
 	return users, nil
 }
 
 func UpdateUser(id int, user *User) error {
-	q := "Update users set name = ? and email = ? and phone =? where id = ?"
+	q := "Update users set name = ? and email = ? and phone = ? where id = ?"
 	_, err := db.Exec(q, user.Name, user.Email, user.Phone, id)
 	if err != nil {
 		log.Fatal("Error while updating user: ", user)
