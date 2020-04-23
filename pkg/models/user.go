@@ -38,14 +38,15 @@ func (u *User) CreateUser() (int64, error) {
 	return id, nil
 }
 
-func GetUser(id string) User {
+func GetUser(id string) (User, error) {
 	row := db.QueryRow("select * from users u where u.id = ?", id)
 	var user User
 	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Phone, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
-		log.Fatalf("No users found for id: %v", id)
+		log.Printf("No users found for id: %v", id)
+		return user, err
 	}
-	return user
+	return user, nil
 }
 
 func GetAllUsers() ([]User, error) {
@@ -63,22 +64,24 @@ func GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func UpdateUser(id int, user *User) error {
+func UpdateUser(id int, user *User) (int64, error) {
 	q := "Update users set name = ?, email = ?, phone = ? where id = ?"
-	_, err := db.Exec(q, user.Name, user.Email, user.Phone, id)
-	if err != nil {
-		log.Fatal("Error while updating user: ", user)
-		return err
+	result, err := db.Exec(q, user.Name, user.Email, user.Phone, id)
+	rows, _ := result.RowsAffected()
+	if err != nil || rows == 0 {
+		log.Printf("Error while updating user: %v or User not found id: %v | error: %v", user, id, err)
+		return 0, err
 	}
-	return nil
+	return rows, nil
 }
 
-func DeleteUser(id int) error {
+func DeleteUser(id int) (int64, error) {
 	q := "Delete from users where id = ?"
-	_, err := db.Exec(q, id)
-	if err != nil {
+	result, err := db.Exec(q, id)
+	deleted, _ := result.RowsAffected()
+	if err != nil || deleted == 0 {
 		log.Printf("Error while deleting user : %v", id)
-		return err
+		return 0, err
 	}
-	return nil
+	return deleted, nil
 }

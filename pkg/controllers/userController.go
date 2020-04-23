@@ -13,7 +13,11 @@ import (
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	var user = models.GetUser(vars["id"])
+	user, err := models.GetUser(vars["id"])
+	if err != nil {
+		_, _ = w.Write([]byte("User not found"))
+		return
+	}
 	resp, _ := json.Marshal(user)
 	_, _ = w.Write(resp)
 }
@@ -51,9 +55,9 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = json.Unmarshal(body, &user)
-	er := models.UpdateUser(userId, &user)
-	if er != nil {
-		_, _ = w.Write([]byte("Error while updating"))
+	rowsFound, er := models.UpdateUser(userId, &user)
+	if er != nil || rowsFound == 0 {
+		_, _ = w.Write([]byte("Error while updating or User not found"))
 		return
 	}
 	user.Id = userId
@@ -68,9 +72,9 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Error parsing id"))
 		return
 	}
-	er := models.DeleteUser(userId)
-	if er != nil {
-		_, _ = w.Write([]byte("Error while deleting user"))
+	rows, er := models.DeleteUser(userId)
+	if er != nil || rows == 0 {
+		_, _ = w.Write([]byte("Error while deleting user or User not found"))
 		return
 	}
 	_, _ = w.Write([]byte("User deleted"))
