@@ -64,7 +64,7 @@ func GetAllUsers() ([]User, error) {
 }
 
 func UpdateUser(id int, user *User) error {
-	q := "Update users set name = ? and email = ? and phone = ? where id = ?"
+	q := "Update users set name = ?, email = ?, phone = ? where id = ?"
 	_, err := db.Exec(q, user.Name, user.Email, user.Phone, id)
 	if err != nil {
 		log.Fatal("Error while updating user: ", user)
@@ -77,7 +77,7 @@ func DeleteUser(id int) error {
 	q := "Delete from users where id = ?"
 	_, err := db.Exec(q, id)
 	if err != nil {
-		log.Fatalf("Error while deleting user : %v", id)
+		log.Printf("Error while deleting user : %v", id)
 		return err
 	}
 	return nil
